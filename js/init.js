@@ -198,8 +198,10 @@ _w.showInnerVoice = showInnerVoice; _w.closeInnerVoice = closeInnerVoice;
 var APP_VERSION = '1.0.0';
 (function () {
   try {
-    fetch('version.json', { cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : null; })
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, 5000);
+    fetch('version.json', { cache: 'no-store', signal: ctrl.signal })
+      .then(function (r) { clearTimeout(timer); return r.ok ? r.json() : null; })
       .then(function (d) { if (d && d.version) APP_VERSION = String(d.version); })
       .catch(function () {});
   } catch (e) {}
