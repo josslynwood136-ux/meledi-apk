@@ -2,6 +2,15 @@
 // init.js - 初始化 + 全局事件绑定 + window 导出
 // ============================================================
 
+// Polyfill: AbortSignal.timeout for old WebView
+if (typeof AbortSignal.timeout !== 'function') {
+  AbortSignal.timeout = function(ms) {
+    var ctrl = new AbortController();
+    setTimeout(function() { ctrl.abort(); }, ms);
+    return ctrl.signal;
+  };
+}
+
 // 错误捕获（改为非阻塞提示，避免弹窗挡住通知授权等浏览器原生对话框）
 function showErrToast(t) {
   try {
