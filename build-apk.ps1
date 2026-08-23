@@ -1,6 +1,6 @@
 ﻿param([switch]$auto)
 
-$b = Join-Path $env:USERPROFILE 'Desktop\--main'
+$b = $PSScriptRoot
 $w = Join-Path $b 'cap-web'
 
 Write-Host '============================================'

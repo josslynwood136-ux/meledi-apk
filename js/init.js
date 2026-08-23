@@ -193,6 +193,38 @@ _w.currentWillowWish = currentWillowWish; _w.currentWillowRule = currentWillowRu
 _w.startIdleProactive = startIdleProactive; _w.setIdleParams = setIdleParams;
 _w.showInnerVoice = showInnerVoice; _w.closeInnerVoice = closeInnerVoice;
 
+// ===== APP 检查更新（对比 GitHub Release 版本号）=====
+var APP_VERSION = '1.0.0';
+var APP_RELEASE_API = 'https://api.github.com/repos/josslynwood136-ux/meledi-apk/releases/latest';
+function _cmpVer(a, b) {
+  var pa = String(a).split('.'), pb = String(b).split('.');
+  for (var i = 0; i < Math.max(pa.length, pb.length); i++) {
+    var x = parseInt(pa[i], 10) || 0, y = parseInt(pb[i], 10) || 0;
+    if (x !== y) return x > y ? 1 : -1;
+  }
+  return 0;
+}
+function checkAppUpdate() {
+  fetch(APP_RELEASE_API, { cache: 'no-store', headers: { 'Accept': 'application/vnd.github+json' } })
+    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function (d) {
+      var remote = String(d.tag_name || '').replace(/^v/i, '');
+      if (!remote) throw new Error('no tag');
+      if (_cmpVer(remote, APP_VERSION) > 0) {
+        var apk = null;
+        (d.assets || []).forEach(function (a) { if (!apk && /\.apk$/i.test(a.name)) apk = a; });
+        var url = apk ? apk.browser_download_url : (d.html_url || APP_RELEASE_API);
+        if (confirm('发现新版本 v' + remote + '（当前 v' + APP_VERSION + '）\n现在下载更新吗？')) {
+          window.open(url, '_blank');
+        }
+      } else {
+        alert('已是最新版本 v' + APP_VERSION);
+      }
+    })
+    .catch(function () { alert('检查更新失败，请检查网络后重试'); });
+}
+_w.checkAppUpdate = checkAppUpdate;
+
 // 离开时保存
 window.addEventListener('beforeunload', saveState);
 
