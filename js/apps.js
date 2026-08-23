@@ -271,7 +271,8 @@ async function testConnection() {
       signal: controller.signal
     });
     var data = await resp.json().catch(function() { return {}; });
-    if (!resp.ok) throw new Error(data.error && data.error.message || resp.status);
+    if (!resp.ok) throw new Error((data.error && data.error.message) || resp.status);
+    if (!data.choices || !data.choices[0]) throw new Error('返回为空（无 choices），检查模型名/Base URL 是否正确：' + JSON.stringify(data).slice(0, 200));
     var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
     if (box) box.innerHTML = '<span style="color:#7aab7a">✓ 连接成功：' + escapeHTML((text || 'ok').trim()) + '</span>';
   } catch (err) {

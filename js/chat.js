@@ -650,6 +650,16 @@ function sendChat() {
     appendBubble('user', text, null, null, null, quoteData);
     input.value = '';
     touchActiveChar();
+    // 触发对方回复：主聊天发文本消息本就该让角色回一句
+    _manualAICall = true;
+    setChatTyping(true);
+    callAI(text, false, false).then(async function(reply) {
+      await deliverReply(reply || '……');
+    }).catch(function(err) {
+      if (err && err.name === 'AbortError') { setChatTyping(false); return; }
+      setChatTyping(false);
+      appendBubble('system', '暂时没回应（' + (err && err.message || err) + '）');
+    });
     return;
   } else {
     const char = activeCharacter();
@@ -1092,7 +1102,7 @@ async function callAI(text, shortTest = false, proactive = false, forChar = null
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error?.message || response.status);
       var choices = data.choices || [];
-      if (!choices.length) throw new Error('Empty choices');
+      if (!choices.length) throw new Error('Empty choices: ' + (JSON.stringify(data) || '').slice(0, 300));
       // 若有多候选，启发式打分选最优
       var bestContent = '';
       var bestScore = -1e9;

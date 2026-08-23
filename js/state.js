@@ -511,13 +511,16 @@ function relayBase() {
 }
 function relayAvailable() {
   if (__relayProbe !== null) return Promise.resolve(__relayProbe);
-  if ((typeof location === 'undefined') || location.protocol === 'file:') {
-    if (!relayBase()) {
-      __relayProbe = false;
-      return Promise.resolve(false);
-    }
-  }
   var base = relayBase();
+  // 原生/本地应用（file / capacitor / localhost）自身没有 /relay 服务，必须直连，不要去探测同源 relay
+  var isLocalApp = (typeof location === 'undefined') ||
+    location.protocol === 'file:' ||
+    location.protocol === 'capacitor:' ||
+    /^(localhost|127\.0\.0\.1|\[::1\])$/i.test(location.hostname || '');
+  if (!base && isLocalApp) {
+    __relayProbe = false;
+    return Promise.resolve(false);
+  }
   var probeUrl = base ? (base + '/relay-probe') : '/relay-probe';
   __relayProbe = fetch(probeUrl, { method: 'HEAD' })
     .then(function (r) { return r.ok || r.status === 204; })
