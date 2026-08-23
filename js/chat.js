@@ -650,16 +650,7 @@ function sendChat() {
     appendBubble('user', text, null, null, null, quoteData);
     input.value = '';
     touchActiveChar();
-    // 触发对方回复：主聊天发文本消息本就该让角色回一句
-    _manualAICall = true;
-    setChatTyping(true);
-    callAI(text, false, false).then(async function(reply) {
-      await deliverReply(reply || '……');
-    }).catch(function(err) {
-      if (err && err.name === 'AbortError') { setChatTyping(false); return; }
-      setChatTyping(false);
-      appendBubble('system', '暂时没回应（' + (err && err.message || err) + '）');
-    });
+    // 发文字消息不让对方自动回复；只有空框点发送（戳一戳）才触发回复
     return;
   } else {
     const char = activeCharacter();
