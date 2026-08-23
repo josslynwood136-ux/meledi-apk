@@ -3,9 +3,7 @@
   "appName": "美乐地",
   "webDir": "cap-web",
   "server": {
-    "androidScheme": "https",
-    "url": "https://josslynwood136-ux.github.io/meledi-apk/",
-    "cleartext": false
+    "androidScheme": "https"
   },
   "plugins": {
     "LocalNotifications": {
