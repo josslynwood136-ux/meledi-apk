@@ -194,7 +194,16 @@ _w.startIdleProactive = startIdleProactive; _w.setIdleParams = setIdleParams;
 _w.showInnerVoice = showInnerVoice; _w.closeInnerVoice = closeInnerVoice;
 
 // ===== APP 检查更新（对比 GitHub Release 版本号）=====
+// 版本号统一从根目录 version.json 读取，发新版只改那一个文件即可
 var APP_VERSION = '1.0.0';
+(function () {
+  try {
+    fetch('version.json', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { if (d && d.version) APP_VERSION = String(d.version); })
+      .catch(function () {});
+  } catch (e) {}
+})();
 var APP_RELEASE_API = 'https://api.github.com/repos/josslynwood136-ux/meledi-apk/releases/latest';
 function _cmpVer(a, b) {
   var pa = String(a).split('.'), pb = String(b).split('.');
@@ -204,26 +213,73 @@ function _cmpVer(a, b) {
   }
   return 0;
 }
+function openExternal(url) {
+  try {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+      window.Capacitor.Plugins.Browser.open({ url: url });
+      return;
+    }
+  } catch (e) {}
+  var w = window.open(url, '_blank');
+  if (!w) { window.location.href = url; }
+}
+function closeUpdateModal() {
+  var m = document.getElementById('updateModal');
+  if (m) m.classList.remove('active');
+}
+function updateGoDownload() {
+  openExternal(window._updateUrl || APP_RELEASE_API);
+  closeUpdateModal();
+}
+function showUpdateResult(d) {
+  var titleEl = document.getElementById('updateTitle');
+  var bodyEl = document.getElementById('updateBody');
+  var actBtn = document.getElementById('updateActionBtn');
+  if (!titleEl || !bodyEl || !actBtn) return;
+  var remote = String(d.tag_name || '').replace(/^v/i, '');
+  var apk = null;
+  (d.assets || []).forEach(function (a) { if (!apk && /\.apk$/i.test(a.name)) apk = a; });
+  window._updateUrl = apk ? apk.browser_download_url : (d.html_url || APP_RELEASE_API);
+  var notes = (d.body || '').trim();
+  if (remote && _cmpVer(remote, APP_VERSION) > 0) {
+    titleEl.textContent = '发现新版本 v' + remote;
+    var html = '当前版本 v' + APP_VERSION + '，有新版本可用。';
+    if (notes) {
+      html += '<div style="margin-top:10px;max-height:180px;overflow:auto;white-space:pre-wrap;font-size:13px;color:#666">' + escapeHTML(notes) + '</div>';
+    }
+    bodyEl.innerHTML = html;
+    actBtn.style.display = '';
+    actBtn.textContent = '前往下载';
+  } else {
+    titleEl.textContent = '已是最新版本';
+    bodyEl.textContent = '当前已是最新版本 v' + APP_VERSION + '，无需更新。';
+    actBtn.style.display = 'none';
+  }
+  var m = document.getElementById('updateModal');
+  if (m) m.classList.add('active');
+}
 function checkAppUpdate() {
+  var titleEl = document.getElementById('updateTitle');
+  var bodyEl = document.getElementById('updateBody');
+  var actBtn = document.getElementById('updateActionBtn');
+  if (titleEl) titleEl.textContent = '检查更新中…';
+  if (bodyEl) bodyEl.textContent = '正在连接 GitHub 获取最新版本信息…';
+  if (actBtn) actBtn.style.display = 'none';
+  var m = document.getElementById('updateModal');
+  if (m) m.classList.add('active');
   fetch(APP_RELEASE_API, { cache: 'no-store', headers: { 'Accept': 'application/vnd.github+json' } })
     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(function (d) {
-      var remote = String(d.tag_name || '').replace(/^v/i, '');
-      if (!remote) throw new Error('no tag');
-      if (_cmpVer(remote, APP_VERSION) > 0) {
-        var apk = null;
-        (d.assets || []).forEach(function (a) { if (!apk && /\.apk$/i.test(a.name)) apk = a; });
-        var url = apk ? apk.browser_download_url : (d.html_url || APP_RELEASE_API);
-        if (confirm('发现新版本 v' + remote + '（当前 v' + APP_VERSION + '）\n现在下载更新吗？')) {
-          window.open(url, '_blank');
-        }
-      } else {
-        alert('已是最新版本 v' + APP_VERSION);
-      }
-    })
-    .catch(function () { alert('检查更新失败，请检查网络后重试'); });
+    .then(function (d) { showUpdateResult(d); })
+    .catch(function () {
+      if (titleEl) titleEl.textContent = '检查失败';
+      if (bodyEl) bodyEl.textContent = '无法连接 GitHub，请检查网络后重试。';
+      if (actBtn) actBtn.style.display = 'none';
+    });
 }
 _w.checkAppUpdate = checkAppUpdate;
+_w.closeUpdateModal = closeUpdateModal;
+_w.updateGoDownload = updateGoDownload;
+
 
 // 离开时保存
 window.addEventListener('beforeunload', saveState);

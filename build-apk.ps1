@@ -11,7 +11,7 @@ Write-Host '[1/4] 同步网页资源...'
 Remove-Item (Join-Path $w '*') -Recurse -Force -ErrorAction SilentlyContinue
 Copy-Item -Recurse -Force (Join-Path $b 'css') (Join-Path $w 'css')
 Copy-Item -Recurse -Force (Join-Path $b 'js') (Join-Path $w 'js')
-foreach ($f in 'index.html','manifest.json','sw.js','icon.svg','icon-192.png','icon-512.png') {
+foreach ($f in 'index.html','manifest.json','sw.js','version.json','icon.svg','icon-192.png','icon-512.png') {
   Copy-Item -Force (Join-Path $b $f) (Join-Path $w $f)
 }
 $assets = Join-Path $b 'android\app\src\main\assets\public'

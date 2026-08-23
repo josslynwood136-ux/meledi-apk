@@ -192,6 +192,12 @@ function renderApiSettings() {
   h += '<div style="font-size:13px;font-weight:600;color:#4a3f35;padding-bottom:2px;border-bottom:1px solid #f0ede8">显示</div>';
   h += '<div style="font-size:11px;color:#c0b0a0;line-height:1.5;padding:0 4px">如果直接用浏览器打开 HTML，部分接口可能因跨域策略被拦截。能用的中转接口或允许跨域的 API 可直接聊天。</div></div>';
 
+  h += '<div style="background:#fff;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px">';
+  h += '<div style="font-size:13px;font-weight:600;color:#4a3f35;padding-bottom:2px;border-bottom:1px solid #f0ede8">关于</div>';
+  h += '<div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:12px;color:#4a3f35">美乐地</div><div style="font-size:11px;color:#b8a99a">v' + (window.APP_VERSION || '1.0.0') + '</div></div>';
+  h += '<button class="ghost-btn" onclick="checkAppUpdate()" style="justify-content:center">检查更新</button>';
+  h += '</div>';
+
   c().innerHTML = h;
   initApiSettings();
   if (typeof refreshPushUI === 'function') refreshPushUI();

@@ -6,6 +6,7 @@ echo  美乐地 - 安卓打包（需先装好 Android Studio）
 echo ============================================
 echo.
 echo [1/2] 同步网页资源到安卓工程...
+copy /Y "version.json" "cap-web\version.json" >nul
 call npx cap sync android
 if errorlevel 1 (
   echo 同步失败，请确认已运行 npm install 且网络正常。

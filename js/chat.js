@@ -53,9 +53,15 @@ function openChat(characterId, skin) {
       }
     }
   }
-  saveState();
+  _renderFrom = null;
   pendingReply = false;
   _manualAICall = false;
+  // 进聊天时整体 state 很大（含 base64 图片），同步存会卡几秒；
+  // 改为空闲时再存，打开瞬间不再卡顿，未读状态仍会持久化
+  try {
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(function () { try { saveState(); } catch (e) {} });
+    else setTimeout(function () { try { saveState(); } catch (e) {} }, 600);
+  } catch (e) {}
   if (typeof refreshPushProfile === 'function') refreshPushProfile();
   $('sendBtn').style.display = '';
   var ob = $('aiBtn');
@@ -347,14 +353,28 @@ function selectHereTo() {
   renderPreviewVisual();
 }
 
+let _renderFrom = null;
+const CHAT_RENDER_LIMIT = 60;
+function loadEarlierMessages() {
+  const chat = (activeCharacter() && activeCharacter().chat) || [];
+  const cur = (_renderFrom == null) ? chat.length : _renderFrom;
+  _renderFrom = Math.max(0, cur - CHAT_RENDER_LIMIT);
+  renderChat();
+}
 function renderChat() {
   const char = activeCharacter();
   $('chatName').innerText = char.name;
   const relEl = $('chatRel');
   if (relEl) relEl.innerText = char.relation ? '· ' + char.relation : (char.online ? '· 在线' : '· 离线');
   const typing = chatTyping ? `<div class="msg left"><div class="avatar">${renderAvatar(char.avatar, char.name)}</div><div class="bubble typing"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div></div>` : '';
+  const chat = char.chat || [];
+  if (_renderFrom == null) _renderFrom = Math.max(0, chat.length - CHAT_RENDER_LIMIT);
+  const _from = Math.max(0, _renderFrom);
+  const _view = chat.slice(_from);
+  const _earlier = _from > 0 ? `<div class="load-earlier" onclick="loadEarlierMessages()">↑ 查看更早的 ${Math.min(_from, CHAT_RENDER_LIMIT)} 条消息</div>` : '';
   let lastDate = '';
-  $('chatBody').innerHTML = (char.chat || []).map((msg, i) => {
+  $('chatBody').innerHTML = _earlier + _view.map((msg, k) => {
+    const i = _from + k;
     const isUser = msg.role === 'user';
     const msgDate = msg.time ? msg.time.slice(0, 10) : '';
     const divider = (msgDate && msgDate !== lastDate) ? `<div class="time-divider">${msgDate}</div>` : '';
@@ -1925,6 +1945,8 @@ function openSettings() {
   }
   applyBubbleStyle();
   renderSettingsMemories();
+  var u = document.getElementById('updateHint');
+  if (u) u.textContent = '当前版本 v' + (window.APP_VERSION || '1.0.0');
 }
 function closeSettings() { $('chatSettings').classList.remove('open'); }
 function renderSettingsMemories() {
