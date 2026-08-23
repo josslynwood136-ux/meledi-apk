@@ -1,0 +1,13 @@
+{
+  "appId": "com.mele.app",
+  "appName": "美乐地",
+  "webDir": "cap-web",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "iconColor": "#15516f"
+    }
+  }
+}

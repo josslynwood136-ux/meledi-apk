@@ -1,0 +1,21 @@
+node_modules/
+sever/node_modules/
+push-subscriptions.json
+*.log
+.DS_Store
+
+# IDE / 编辑器
+.idea/
+
+# 构建产物与本地配置（一键打包会自动重新生成）
+cap-web/
+android/app/src/main/assets/public/
+android/.gradle/
+android/app/build/
+android/build/
+android/capacitor-cordova-android-plugins/build/
+android/local.properties
+*.apk
+
+# 密钥（切勿提交！）
+sever/vapid-keys.json
