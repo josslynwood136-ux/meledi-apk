@@ -56,12 +56,9 @@ function openChat(characterId, skin) {
   _renderFrom = null;
   pendingReply = false;
   _manualAICall = false;
-  // 进聊天时整体 state 很大（含 base64 图片），同步存会卡几秒；
-  // 改为空闲时再存，打开瞬间不再卡顿，未读状态仍会持久化
-  try {
-    if (typeof requestIdleCallback === 'function') requestIdleCallback(function () { try { saveState(); } catch (e) {} });
-    else setTimeout(function () { try { saveState(); } catch (e) {} }, 600);
-  } catch (e) {}
+  // 注意：进聊天【不要】同步 saveState()！
+  // state 含大量 base64 图片，整体序列化要几秒，会卡死进入聊天。
+  // 未读清零这类小事交给关 App(beforeunload) 或发消息时再存即可。
   if (typeof refreshPushProfile === 'function') refreshPushProfile();
   $('sendBtn').style.display = '';
   var ob = $('aiBtn');
