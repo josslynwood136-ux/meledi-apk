@@ -228,8 +228,25 @@ function closeUpdateModal() {
   if (m) m.classList.remove('active');
 }
 function updateGoDownload() {
-  openExternal(window._updateUrl || APP_RELEASE_API);
-  closeUpdateModal();
+  var url = window._updateUrl || APP_RELEASE_API;
+  var bodyEl = document.getElementById('updateBody');
+  var actBtn = document.getElementById('updateActionBtn');
+  var installer = (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.ApkInstaller) || null;
+  if (installer && /\.apk(\?|$)/i.test(url)) {
+    if (actBtn) actBtn.disabled = true;
+    if (bodyEl) bodyEl.textContent = '正在下载更新包，请稍候…';
+    installer.downloadAndInstall({ url: url }).then(function () {
+      if (actBtn) actBtn.disabled = false;
+      closeUpdateModal();
+    }).catch(function (err) {
+      if (actBtn) actBtn.disabled = false;
+      if (bodyEl) bodyEl.textContent = '应用内下载失败（' + ((err && err.message) || err || '未知错误') + '），已改为浏览器下载。';
+      openExternal(url);
+    });
+  } else {
+    openExternal(url);
+    closeUpdateModal();
+  }
 }
 function showUpdateResult(d) {
   var titleEl = document.getElementById('updateTitle');
@@ -249,7 +266,7 @@ function showUpdateResult(d) {
     }
     bodyEl.innerHTML = html;
     actBtn.style.display = '';
-    actBtn.textContent = '前往下载';
+    actBtn.textContent = '立即更新';
   } else {
     titleEl.textContent = '已是最新版本';
     bodyEl.textContent = '当前已是最新版本 v' + APP_VERSION + '，无需更新。';
